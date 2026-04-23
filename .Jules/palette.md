@@ -1,0 +1,3 @@
+## 2024-11-20 - Custom Interactive Elements Lack Keyboard Support
+**Learning:** Developers often use `div` elements with `onClick` handlers for interactive components (like the expandable broker rows), which entirely breaks keyboard navigation (tabbing and Enter/Space to activate) and prevents screen reader usage. This pattern seems common in lists of custom cards.
+**Action:** Always refactor interactive `div` elements into semantic `<button>` elements. Ensure utility classes (`text-left`) are used to override default button centering styles and include explicit focus indicators (`focus-visible:ring-2`) and proper ARIA states (`aria-expanded`, `aria-controls`).

@@ -25,6 +25,7 @@ const BrokerRemoval: React.FC<Props> = ({ brokers, userData }) => {
   const [emailTemplate, setEmailTemplate] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'guide' | 'email'>('guide');
+  const [copiedEmailBroker, setCopiedEmailBroker] = useState<string | null>(null);
 
   const handleBrokerClick = async (broker: BrokerGuide) => {
     if (selectedBroker === broker.name) {
@@ -140,9 +141,11 @@ const BrokerRemoval: React.FC<Props> = ({ brokers, userData }) => {
                  </div>
 
                  {/* Main Click Area */}
-                 <div 
+                 <button
                     onClick={() => handleBrokerClick(broker)}
-                    className="flex-1 p-4 flex items-center justify-between cursor-pointer hover:bg-cyber-700/50 transition-colors"
+                    aria-expanded={selectedBroker === broker.name}
+                    aria-controls={`broker-panel-${broker.name}`}
+                    className="flex-1 p-4 flex items-center justify-between cursor-pointer hover:bg-cyber-700/50 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-cyber-500"
                  >
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center border font-bold text-sm bg-cyber-900 border-cyber-700 text-gray-300`}>
@@ -165,12 +168,12 @@ const BrokerRemoval: React.FC<Props> = ({ brokers, userData }) => {
                       </div>
                     </div>
                     {selectedBroker === broker.name ? <ChevronUp className="text-cyber-500" /> : <ChevronDown className="text-gray-500" />}
-                 </div>
+                 </button>
               </div>
 
               {/* Expanded Content */}
               {selectedBroker === broker.name && (
-                <div className="border-t border-cyber-700 bg-cyber-900/50 p-6 animate-fade-in">
+                <div id={`broker-panel-${broker.name}`} className="border-t border-cyber-700 bg-cyber-900/50 p-6 animate-fade-in">
                   
                   {/* Status Selection Toolbar */}
                   <div className="mb-6 bg-black/20 p-3 rounded-lg border border-cyber-700/50">
@@ -256,10 +259,18 @@ const BrokerRemoval: React.FC<Props> = ({ brokers, userData }) => {
                             value={emailTemplate}
                           />
                           <button 
-                            onClick={() => navigator.clipboard.writeText(emailTemplate)}
+                            onClick={() => {
+                              navigator.clipboard.writeText(emailTemplate);
+                              setCopiedEmailBroker(broker.name);
+                              setTimeout(() => setCopiedEmailBroker(null), 2000);
+                            }}
                             className="absolute top-14 right-4 bg-cyber-800 hover:bg-cyber-700 text-xs px-3 py-1 rounded border border-cyber-600 flex items-center gap-1 transition-colors"
                           >
-                            Copy
+                            {copiedEmailBroker === broker.name ? (
+                              <><CheckCircle2 className="w-3 h-3 text-emerald-500" /> Copied!</>
+                            ) : (
+                              'Copy'
+                            )}
                           </button>
                         </div>
                       )}

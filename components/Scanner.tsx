@@ -66,10 +66,12 @@ const Scanner: React.FC<ScannerProps> = ({ onScanComplete }) => {
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <label className="text-xs font-bold text-cyber-400 uppercase tracking-wider">Target Name</label>
+            <label htmlFor="target-name" className="text-xs font-bold text-cyber-400 uppercase tracking-wider">Target Name</label>
             <input
+              id="target-name"
               type="text"
               required
+              autoComplete="name"
               placeholder="e.g. John Doe"
               className="w-full bg-cyber-900 border border-cyber-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyber-500 focus:border-transparent outline-none transition-all placeholder-cyber-700"
               value={formData.name}
@@ -77,8 +79,9 @@ const Scanner: React.FC<ScannerProps> = ({ onScanComplete }) => {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-bold text-cyber-400 uppercase tracking-wider">Location</label>
+            <label htmlFor="target-location" className="text-xs font-bold text-cyber-400 uppercase tracking-wider">Location</label>
             <input
+              id="target-location"
               type="text"
               required
               placeholder="e.g. San Francisco, CA"
@@ -88,9 +91,11 @@ const Scanner: React.FC<ScannerProps> = ({ onScanComplete }) => {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-bold text-cyber-400 uppercase tracking-wider">Email (Optional)</label>
+            <label htmlFor="target-email" className="text-xs font-bold text-cyber-400 uppercase tracking-wider">Email (Optional)</label>
             <input
+              id="target-email"
               type="email"
+              autoComplete="email"
               placeholder="For deeper analysis"
               className="w-full bg-cyber-900 border border-cyber-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyber-500 focus:border-transparent outline-none transition-all placeholder-cyber-700"
               value={formData.email}
