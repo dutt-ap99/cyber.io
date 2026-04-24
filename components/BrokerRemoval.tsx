@@ -12,6 +12,10 @@ interface Props {
   userData: { name: string; email: string; location: string };
 }
 
+const isValidUrl = (url: string) => {
+  return url.startsWith('http://') || url.startsWith('https://');
+};
+
 const BrokerRemoval: React.FC<Props> = ({ brokers, userData }) => {
   const [localBrokers, setLocalBrokers] = useState<BrokerGuide[]>([]);
   
@@ -234,10 +238,11 @@ const BrokerRemoval: React.FC<Props> = ({ brokers, userData }) => {
                            
                            <div className="pt-4 border-t border-cyber-700">
                              <a 
-                               href={broker.url} 
+                               href={isValidUrl(broker.url) ? broker.url : '#'}
                                target="_blank" 
                                rel="noopener noreferrer"
-                               className="block w-full text-center bg-cyber-500 text-cyber-900 px-4 py-3 rounded font-bold hover:bg-cyber-400 transition-colors flex items-center justify-center gap-2"
+                               className={`block w-full text-center bg-cyber-500 text-cyber-900 px-4 py-3 rounded font-bold hover:bg-cyber-400 transition-colors flex items-center justify-center gap-2 ${!isValidUrl(broker.url) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                               onClick={(e) => { if (!isValidUrl(broker.url)) e.preventDefault(); }}
                              >
                                Open {broker.name} Opt-Out Page <ExternalLink className="w-4 h-4" />
                              </a>
