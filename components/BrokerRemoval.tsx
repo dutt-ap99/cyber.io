@@ -88,8 +88,14 @@ const BrokerRemoval: React.FC<Props> = ({ brokers, userData }) => {
   };
 
   // Calculate Progress
-  const completedCount = localBrokers.filter(b => b.status === 'completed').length;
-  const inProgressCount = localBrokers.filter(b => b.status === 'processing' || b.status === 'escalated').length;
+  const { completedCount, inProgressCount } = React.useMemo(() => {
+    return localBrokers.reduce((acc, b) => {
+      if (b.status === 'completed') acc.completedCount++;
+      else if (b.status === 'processing' || b.status === 'escalated') acc.inProgressCount++;
+      return acc;
+    }, { completedCount: 0, inProgressCount: 0 });
+  }, [localBrokers]);
+
   const progress = localBrokers.length > 0 ? (completedCount / localBrokers.length) * 100 : 0;
 
   return (
