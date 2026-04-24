@@ -11,8 +11,6 @@ const getAiClient = () => {
 
 // Analyzes the potential footprint based on generic user info and generates search queries
 export const analyzeDigitalFootprint = async (name: string, location: string, email?: string): Promise<ScanResult> => {
-  const ai = getAiClient();
-  
   const prompt = `
     Act as a senior cybersecurity analyst. A user named "${name}" located in "${location}" wants to audit their public digital footprint.
     
@@ -24,6 +22,7 @@ export const analyzeDigitalFootprint = async (name: string, location: string, em
   `;
 
   try {
+    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
