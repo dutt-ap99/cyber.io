@@ -26,6 +26,9 @@ const BrokerRemoval: React.FC<Props> = ({ brokers, userData }) => {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<'guide' | 'email'>('guide');
 
+  const [instructionsCache, setInstructionsCache] = useState<Record<string, string>>({});
+  const [emailCache, setEmailCache] = useState<Record<string, string>>({});
+
   const handleBrokerClick = async (broker: BrokerGuide) => {
     if (selectedBroker === broker.name) {
       setSelectedBroker(null);
@@ -33,14 +36,22 @@ const BrokerRemoval: React.FC<Props> = ({ brokers, userData }) => {
     }
     
     setSelectedBroker(broker.name);
-    setLoading(true);
     setMode('guide');
+
+    if (instructionsCache[broker.name]) {
+      setInstructions(instructionsCache[broker.name]);
+      setEmailTemplate(emailCache[broker.name] || '');
+      return;
+    }
+
+    setLoading(true);
     setInstructions('');
     setEmailTemplate('');
 
     try {
       const guide = await generateRemovalInstructions(broker.name);
       setInstructions(guide);
+      setInstructionsCache(prev => ({ ...prev, [broker.name]: guide }));
     } catch (e) {
       console.error(e);
       setInstructions("Failed to load instructions. Please try again.");
@@ -51,6 +62,11 @@ const BrokerRemoval: React.FC<Props> = ({ brokers, userData }) => {
 
   const handleLoadEmail = async (brokerName: string) => {
     setMode('email');
+    if (emailCache[brokerName]) {
+      setEmailTemplate(emailCache[brokerName]);
+      return;
+    }
+
     if (!emailTemplate) {
       setLoading(true);
       const email = await generateDeletionEmail(brokerName, { 
@@ -59,6 +75,7 @@ const BrokerRemoval: React.FC<Props> = ({ brokers, userData }) => {
         address: userData.location 
       });
       setEmailTemplate(email);
+      setEmailCache(prev => ({ ...prev, [brokerName]: email }));
       setLoading(false);
     }
   };
