@@ -1,22 +1,22 @@
 import express from 'express';
 import cors from 'cors';
-import * as dotenv from 'dotenv';
 import { GoogleGenAI, Type } from "@google/genai";
-import { createServer as createViteServer } from 'vite';
+import { getPlatformResolution } from '../services/resolutionService.js';
+import * as dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 dotenv.config({ path: '.env.local' });
-dotenv.config(); // fallback to .env
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
-// RiskLevel Enum copied from types.ts
+// RiskLevel Enum equivalent
 const RiskLevel = {
     LOW: 'Low',
     MEDIUM: 'Medium',
@@ -24,13 +24,34 @@ const RiskLevel = {
     CRITICAL: 'Critical'
 };
 
+let cachedClient: GoogleGenAI | null = null;
+
 const getAiClient = () => {
-    const apiKey = process.env.GEMINI_API_KEY;
+    if (cachedClient) return cachedClient;
+
+    const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is missing from environment variables");
+      throw new Error("API_KEY is missing from environment variables");
     }
-    return new GoogleGenAI({ apiKey });
+    cachedClient = new GoogleGenAI({ apiKey });
+    return cachedClient;
 };
+
+
+app.post('/api/resolve', async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url) {
+       res.status(400).json({ error: 'URL is required' });
+       return;
+    }
+    const data = await getPlatformResolution(url);
+    res.json(data);
+  } catch (error: any) {
+    console.error('Resolution API Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to resolve' });
+  }
+});
 
 app.post('/api/analyze', async (req, res) => {
     try {
@@ -91,7 +112,7 @@ app.post('/api/analyze', async (req, res) => {
         if (!text) throw new Error("No response from AI");
 
         res.json(JSON.parse(text));
-    } catch (error) {
+    } catch (error: any) {
         console.error("Analysis failed:", error);
         res.status(500).json({ error: error.message || "Failed to analyze" });
     }
@@ -149,28 +170,7 @@ app.post('/api/email', async (req, res) => {
     }
 });
 
-async function createServer() {
-    // If we're not in production, use Vite's development server in middleware mode
-    const isProd = process.env.NODE_ENV === 'production';
-
-    if (!isProd) {
-        const vite = await createViteServer({
-            server: { middlewareMode: true },
-            appType: 'spa'
-        });
-        app.use(vite.middlewares);
-    } else {
-        // Serve static files in production
-        app.use(express.static(path.resolve(__dirname, 'dist')));
-        app.get('*', (req, res) => {
-            res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
-        });
-    }
-
-    const port = process.env.PORT || 3000;
-    app.listen(port, () => {
-        console.log(`Server running on http://localhost:${port}`);
-    });
-}
-
-createServer();
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
