@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Scanner from './components/Scanner';
 import BrokerRemoval from './components/BrokerRemoval';
 import { ScanResult } from './types';
-import { ShieldCheck, EyeOff, LayoutDashboard, Terminal } from 'lucide-react';
+import { ShieldCheck, EyeOff, LayoutDashboard, Terminal, Printer } from 'lucide-react';
 
 export default function App() {
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
@@ -14,30 +14,38 @@ export default function App() {
     setScanResult(result);
     setUserData(formData);
   };
+
+  const handleResetScan = () => {
+    setScanResult(null);
+  };
+
+  const handlePrintReport = () => {
+    window.print();
+  };
   
   return (
     <div className="min-h-screen bg-cyber-900 text-gray-200 font-sans selection:bg-cyber-500 selection:text-white pb-20">
       
       {/* Navbar */}
-      <nav className="border-b border-cyber-800 bg-cyber-900/80 backdrop-blur-md sticky top-0 z-50">
+      <nav className="border-b border-yellow-600 bg-yellow-500/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-cyber-500 rounded flex items-center justify-center text-cyber-900">
+            <div className="w-8 h-8 bg-cyber-900 rounded flex items-center justify-center text-yellow-500">
               <EyeOff size={20} strokeWidth={2.5} />
             </div>
-            <span className="font-mono font-bold text-lg tracking-tight text-white">
-              GHOST<span className="text-cyber-500">PROTOCOL</span>
+            <span className="font-mono font-bold text-lg tracking-tight text-cyber-900">
+              GHOST<span className="text-cyber-800">PROTOCOL</span>
             </span>
           </div>
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-400">
-            <a href="#" className="hover:text-cyber-400 transition-colors flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-cyber-800">
+            <a href="#" className="hover:text-cyber-900 transition-colors flex items-center gap-1">
               <LayoutDashboard size={14} /> Dashboard
             </a>
-            <a href="#" className="hover:text-cyber-400 transition-colors flex items-center gap-1">
+            <a href="#" className="hover:text-cyber-900 transition-colors flex items-center gap-1">
               <Terminal size={14} /> Tools
             </a>
-            <div className="h-4 w-px bg-cyber-700"></div>
-            <span className="text-xs font-mono text-cyber-500 bg-cyber-500/10 px-2 py-0.5 rounded border border-cyber-500/20">
+            <div className="h-4 w-px bg-yellow-600"></div>
+            <span className="text-xs font-mono text-cyber-900 bg-cyber-900/10 px-2 py-0.5 rounded border border-cyber-900/20">
               v2.5.0 BETA
             </span>
           </div>
@@ -59,11 +67,20 @@ export default function App() {
         )}
 
         {/* Scanner Component */}
-        <Scanner onScanComplete={handleScanComplete} />
+        <Scanner onScanComplete={handleScanComplete} scanCompleted={!!scanResult} onResetScan={handleResetScan} />
 
         {/* Post-Scan Actions */}
         {scanResult && (
           <div className="animate-fade-in-up">
+            <div className="flex justify-end mb-6 print:hidden">
+              <button
+                onClick={handlePrintReport}
+                className="flex items-center gap-2 bg-cyber-800 hover:bg-cyber-700 text-cyber-400 px-4 py-2 rounded border border-cyber-600 transition-colors"
+              >
+                <Printer size={18} />
+                Export / Print Report
+              </button>
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               
               {/* Main Column: Broker Removal */}

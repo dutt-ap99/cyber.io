@@ -10,13 +10,15 @@
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
-    "react-dom": "^19.2.1",
     "lucide-react": "^0.555.0",
-    "react": "^19.2.1"
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "playwright": "^1.59.1",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }
