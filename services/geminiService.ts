@@ -1,6 +1,16 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ScanResult, RiskLevel } from "../types";
 
+export const getFallbackScanResult = (name: string): ScanResult => ({
+  riskScore: 75,
+  summary: "Could not generate live analysis. Showing default high-risk vectors.",
+  dorks: [
+    { title: "Exact Name Match", query: `"${name}"`, description: "Basic exact match search", risk: RiskLevel.MEDIUM },
+    { title: "PDF Documents", query: `"${name}" filetype:pdf`, description: "Public records or resumes", risk: RiskLevel.HIGH }
+  ],
+  recommendedBrokers: []
+});
+
 const getAiClient = () => {
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
@@ -10,8 +20,8 @@ const getAiClient = () => {
 };
 
 // Analyzes the potential footprint based on generic user info and generates search queries
-export const analyzeDigitalFootprint = async (name: string, location: string, email?: string): Promise<ScanResult> => {
-  const ai = getAiClient();
+export const analyzeDigitalFootprint = async (name: string, location: string, email?: string, aiClient?: any): Promise<ScanResult> => {
+  const ai = aiClient || getAiClient();
   
   const prompt = `
     Act as a senior cybersecurity analyst. A user named "${name}" located in "${location}" wants to audit their public digital footprint.
@@ -71,15 +81,7 @@ export const analyzeDigitalFootprint = async (name: string, location: string, em
   } catch (error) {
     console.error("Analysis failed:", error);
     // Fallback data if AI fails
-    return {
-      riskScore: 75,
-      summary: "Could not generate live analysis. Showing default high-risk vectors.",
-      dorks: [
-        { title: "Exact Name Match", query: `"${name}"`, description: "Basic exact match search", risk: RiskLevel.MEDIUM },
-        { title: "PDF Documents", query: `"${name}" filetype:pdf`, description: "Public records or resumes", risk: RiskLevel.HIGH }
-      ],
-      recommendedBrokers: []
-    };
+    return getFallbackScanResult(name);
   }
 };
 
