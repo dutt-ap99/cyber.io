@@ -6,9 +6,11 @@ import { ScanResult, RiskLevel } from '../types';
 
 interface ScannerProps {
   onScanComplete: (result: ScanResult, formData: { name: string; location: string; email: string }) => void;
+  scanCompleted: boolean;
+  onResetScan: () => void;
 }
 
-const Scanner: React.FC<ScannerProps> = ({ onScanComplete }) => {
+const Scanner: React.FC<ScannerProps> = ({ onScanComplete, scanCompleted, onResetScan }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ name: '', location: '', email: '' });
   const [result, setResult] = useState<ScanResult | null>(null);
@@ -97,17 +99,22 @@ const Scanner: React.FC<ScannerProps> = ({ onScanComplete }) => {
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
-          <div className="md:col-span-3 pt-4">
+          <div className="md:col-span-3 pt-4 flex gap-4">
             <button
               type="submit"
-              disabled={loading}
-              className={`w-full py-4 rounded-lg font-bold text-lg tracking-widest uppercase transition-all flex items-center justify-center gap-2
-                ${loading ? 'bg-cyber-700 text-gray-400 cursor-not-allowed' : 'bg-cyber-500 hover:bg-cyber-400 text-cyber-900 shadow-lg shadow-cyber-500/20'}`}
+              disabled={loading || scanCompleted}
+              className={`flex-1 py-4 rounded-lg font-bold text-lg tracking-widest uppercase transition-all flex items-center justify-center gap-2
+                ${loading || scanCompleted ? 'bg-cyber-700 text-gray-400 cursor-not-allowed' : 'bg-cyber-500 hover:bg-cyber-400 text-cyber-900 shadow-lg shadow-cyber-500/20'}`}
             >
               {loading ? (
                 <>
                   <span className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
                   Initializing Deep Scan...
+                </>
+              ) : scanCompleted ? (
+                <>
+                  <Check className="w-5 h-5" />
+                  Scan Complete
                 </>
               ) : (
                 <>
@@ -116,12 +123,25 @@ const Scanner: React.FC<ScannerProps> = ({ onScanComplete }) => {
                 </>
               )}
             </button>
+            {scanCompleted && (
+              <button
+                type="button"
+                onClick={() => {
+                  setResult(null);
+                  setFormData({ name: '', location: '', email: '' });
+                  onResetScan();
+                }}
+                className="py-4 px-8 rounded-lg font-bold text-lg tracking-widest uppercase transition-all flex items-center justify-center gap-2 bg-cyber-800 hover:bg-cyber-700 text-white border border-cyber-600"
+              >
+                Reset Scan
+              </button>
+            )}
           </div>
         </form>
       </div>
 
       {/* Results Section */}
-      {result && (
+      {result && scanCompleted && (
         <div className="animate-fade-in-up space-y-6">
           {/* Dashboard Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
