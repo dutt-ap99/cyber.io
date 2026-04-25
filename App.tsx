@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Scanner from './components/Scanner';
 import BrokerRemoval from './components/BrokerRemoval';
 import FootprintDashboard from './components/FootprintDashboard';
+import AccountResolution from './components/AccountResolution';
 import { ScanResult } from './types';
 import { ShieldCheck, EyeOff, LayoutDashboard, Terminal } from 'lucide-react';
 
@@ -73,12 +74,14 @@ export default function App() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               
-              {/* Main Column: Broker Removal */}
+              {/* Main Column: Broker Removal & Account Resolution */}
               <div className="lg:col-span-2">
                 <BrokerRemoval 
                   brokers={scanResult.recommendedBrokers} 
                   userData={userData} 
                 />
+
+                <AccountResolution />
               </div>
 
               {/* Sidebar: Educational / Tips */}
