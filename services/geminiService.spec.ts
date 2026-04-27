@@ -57,25 +57,31 @@ test('generateRemovalInstructions handles error gracefully', async () => {
 });
 
 test('generateDeletionEmail returns email body on success', async () => {
-  const mockClient = {
-    models: {
-      generateContent: async () => ({ text: "Dear BrokerB, delete my data." })
+  const originalFetch = global.fetch;
+  global.fetch = (async (url: any) => {
+    if (url === '/api/generate-removal-request') {
+      return { ok: true, json: async () => ({ text: 'Dear BrokerB, delete my data.' }) };
     }
-  };
+    return { ok: false };
+  }) as any;
   const userData = { name: "Bob", email: "bob@test.com" };
-  const result = await generateDeletionEmail('BrokerB', userData, mockClient as unknown as GoogleGenAI);
+  const result = await generateDeletionEmail('BrokerB', userData, {} as any);
   assert.strictEqual(result, "Dear BrokerB, delete my data.");
+  global.fetch = originalFetch;
 });
 
 test('generateDeletionEmail handles error gracefully', async () => {
-  const mockClient = {
-    models: {
-      generateContent: async () => { throw new Error("Mock error"); }
+  const originalFetch = global.fetch;
+  global.fetch = (async (url: any) => {
+    if (url === '/api/generate-removal-request') {
+      return { ok: false };
     }
-  };
+    return { ok: false };
+  }) as any;
   const userData = { name: "Bob", email: "bob@test.com" };
-  const result = await generateDeletionEmail('BrokerB', userData, mockClient as any);
+  const result = await generateDeletionEmail('BrokerB', userData, {} as any);
   assert.strictEqual(result, "Error generating email template.");
+  global.fetch = originalFetch;
 });
 
 test('throws error if API_KEY is missing and no client is provided', async () => {
