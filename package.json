@@ -8,27 +8,38 @@
     "dev:server": "tsx server/index.ts",
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:server\"",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
-    "cheerio": "^1.2.0",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
     "lucide-react": "^0.555.0",
-    "node-fetch": "^3.3.2",
     "react": "^19.2.1",
     "react-dom": "^19.2.1"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^22.14.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.0",
-    "concurrently": "^9.2.1",
-    "tsx": "^4.21.0",
+    "jsdom": "^29.0.2",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
-  }
+  },
+  "description": "<div align=\"center\"> <img width=\"1200\" height=\"475\" alt=\"GHBanner\" src=\"https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6\" /> </div>",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dutt-ap99/cyber.io.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dutt-ap99/cyber.io/issues"
+  },
+  "homepage": "https://github.com/dutt-ap99/cyber.io#readme"
 }

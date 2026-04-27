@@ -2,16 +2,17 @@
 import React, { useState } from 'react';
 import Scanner from './components/Scanner';
 import BrokerRemoval from './components/BrokerRemoval';
+import FootprintDashboard from './components/FootprintDashboard';
 import AccountResolution from './components/AccountResolution';
 import { ScanResult } from './types';
 import { ShieldCheck, EyeOff, LayoutDashboard, Terminal } from 'lucide-react';
 
 export default function App() {
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
-  const [userData, setUserData] = useState({ name: '', location: '', email: '' });
+  const [userData, setUserData] = useState({ name: '', location: '', email: '', usernames: '' });
 
   // Handle scan completion and capture user details
-  const handleScanComplete = (result: ScanResult, formData: { name: string; location: string; email: string }) => {
+  const handleScanComplete = (result: ScanResult, formData: { name: string; location: string; email: string; usernames: string }) => {
     setScanResult(result);
     setUserData(formData);
   };
@@ -64,7 +65,13 @@ export default function App() {
 
         {/* Post-Scan Actions */}
         {scanResult && (
-          <div className="animate-fade-in-up">
+          <div className="animate-fade-in-up space-y-12">
+
+            {/* Breaches Dashboard */}
+            {scanResult.breaches !== undefined && (
+              <FootprintDashboard breaches={scanResult.breaches} />
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               
               {/* Main Column: Broker Removal & Account Resolution */}

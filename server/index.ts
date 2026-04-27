@@ -1,11 +1,34 @@
 import express from 'express';
 import cors from 'cors';
+import { GoogleGenAI, Type } from "@google/genai";
 import { getPlatformResolution } from '../services/resolutionService.js';
 import { GoogleGenAI } from '@google/genai';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// RiskLevel Enum equivalent
+const RiskLevel = {
+    LOW: 'Low',
+    MEDIUM: 'Medium',
+    HIGH: 'High',
+    CRITICAL: 'Critical'
+};
+
+let cachedClient: GoogleGenAI | null = null;
+
+const getAiClient = () => {
+    if (cachedClient) return cachedClient;
+
+    const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("API_KEY is missing from environment variables");
+    }
+    cachedClient = new GoogleGenAI({ apiKey });
+    return cachedClient;
+};
+
 
 app.post('/api/resolve', async (req, res) => {
   try {

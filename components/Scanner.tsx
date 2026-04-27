@@ -2,15 +2,16 @@
 import React, { useState } from 'react';
 import { Search, ShieldAlert, ExternalLink, Lock, Copy, Check } from 'lucide-react';
 import { analyzeDigitalFootprint } from '../services/geminiService';
+import { checkBreaches } from '../services/pwnedService';
 import { ScanResult, RiskLevel } from '../types';
 
 interface ScannerProps {
-  onScanComplete: (result: ScanResult, formData: { name: string; location: string; email: string }) => void;
+  onScanComplete: (result: ScanResult, formData: { name: string; location: string; email: string; usernames: string }) => void;
 }
 
 const Scanner: React.FC<ScannerProps> = ({ onScanComplete }) => {
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ name: '', location: '', email: '' });
+  const [formData, setFormData] = useState({ name: '', location: '', email: '', usernames: '' });
   const [result, setResult] = useState<ScanResult | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
@@ -21,10 +22,17 @@ const Scanner: React.FC<ScannerProps> = ({ onScanComplete }) => {
     setLoading(true);
     setResult(null);
     try {
-      const data = await analyzeDigitalFootprint(formData.name, formData.location, formData.email);
-      setResult(data);
+      const parsedUsernames = formData.usernames.split(',').map(u => u.trim()).filter(Boolean);
+
+      const [data, breaches] = await Promise.all([
+        analyzeDigitalFootprint(formData.name, formData.location, formData.email),
+        checkBreaches(formData.email, parsedUsernames)
+      ]);
+
+      const fullData = { ...data, breaches };
+      setResult(fullData);
       // Pass both result and user data up to App
-      onScanComplete(data, formData);
+      onScanComplete(fullData, formData);
     } catch (error) {
       console.error(error);
     } finally {
@@ -64,7 +72,7 @@ const Scanner: React.FC<ScannerProps> = ({ onScanComplete }) => {
           Vulnerability Scanner
         </h2>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-2">
             <label className="text-xs font-bold text-cyber-400 uppercase tracking-wider">Target Name</label>
             <input
@@ -91,13 +99,23 @@ const Scanner: React.FC<ScannerProps> = ({ onScanComplete }) => {
             <label className="text-xs font-bold text-cyber-400 uppercase tracking-wider">Email (Optional)</label>
             <input
               type="email"
-              placeholder="For deeper analysis"
+              placeholder="For deeper analysis & breach check"
               className="w-full bg-cyber-900 border border-cyber-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyber-500 focus:border-transparent outline-none transition-all placeholder-cyber-700"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
-          <div className="md:col-span-3 pt-4">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-cyber-400 uppercase tracking-wider">Usernames (Optional)</label>
+            <input
+              type="text"
+              placeholder="Comma separated (e.g. jdoe1, john_d)"
+              className="w-full bg-cyber-900 border border-cyber-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyber-500 focus:border-transparent outline-none transition-all placeholder-cyber-700"
+              value={formData.usernames}
+              onChange={(e) => setFormData({ ...formData, usernames: e.target.value })}
+            />
+          </div>
+          <div className="md:col-span-4 pt-4">
             <button
               type="submit"
               disabled={loading}
