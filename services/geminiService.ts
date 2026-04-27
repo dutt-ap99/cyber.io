@@ -18,7 +18,8 @@ const getAiClient = () => {
 };
 
 // Analyzes the potential footprint based on generic user info and generates search queries
-export const analyzeDigitalFootprint = async (name: string, location: string, email?: string): Promise<ScanResult> => {
+export const analyzeDigitalFootprint = async (name: string, location: string, email?: string, aiClient?: GoogleGenAI): Promise<ScanResult> => {
+  const ai = aiClient || getAiClient();
   const prompt = `
     Act as a senior cybersecurity analyst. A user named "${name}" located in "${location}" wants to audit their public digital footprint.
     
@@ -30,7 +31,6 @@ export const analyzeDigitalFootprint = async (name: string, location: string, em
   `;
 
   try {
-    const ai = getAiClient();
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
@@ -90,8 +90,8 @@ export const analyzeDigitalFootprint = async (name: string, location: string, em
   }
 };
 
-export const generateRemovalInstructions = async (brokerName: string): Promise<string> => {
-  const ai = getAiClient();
+export const generateRemovalInstructions = async (brokerName: string, aiClient?: GoogleGenAI): Promise<string> => {
+  const ai = aiClient || getAiClient();
   const prompt = `
     Provide a concise, step-by-step guide on how to opt-out and remove personal data from the data broker "${brokerName}".
     Include a direct link to the opt-out page if known.
@@ -110,8 +110,8 @@ export const generateRemovalInstructions = async (brokerName: string): Promise<s
   }
 };
 
-export const generateDeletionEmail = async (brokerName: string, userData: { name: string, email: string, address?: string }): Promise<string> => {
-  const ai = getAiClient();
+export const generateDeletionEmail = async (brokerName: string, userData: { name: string, email: string, address?: string }, aiClient?: GoogleGenAI): Promise<string> => {
+  const ai = aiClient || getAiClient();
   const prompt = `
     Write a formal GDPR/CCPA data deletion request email to "${brokerName}".
     
