@@ -24,11 +24,21 @@ export interface BrokerGuide {
   status?: BrokerStatus;
 }
 
+export interface BreachedService {
+  name: string;
+  domain: string;
+  breachDate: string;
+  description: string;
+  dataClasses: string[];
+  riskLevel: RiskLevel;
+}
+
 export interface ScanResult {
   riskScore: number;
   summary: string;
   dorks: GoogleDork[];
   recommendedBrokers: BrokerGuide[];
+  breaches?: BreachedService[];
 }
 
 export interface Message {
