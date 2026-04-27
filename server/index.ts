@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { getPlatformResolution } from '../services/resolutionService.js';
+import { GoogleGenAI } from '@google/genai';
 
 const app = express();
 app.use(cors());
@@ -18,6 +19,47 @@ app.post('/api/resolve', async (req, res) => {
   } catch (error: any) {
     console.error('Resolution API Error:', error);
     res.status(500).json({ error: error.message || 'Failed to resolve' });
+  }
+});
+
+app.post('/api/generate-removal-request', async (req, res) => {
+  try {
+    const { name, email, address, brokerName } = req.body;
+
+    if (!name || !email || !brokerName) {
+      res.status(400).json({ error: 'Name, email, and brokerName are required.' });
+      return;
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      res.status(500).json({ error: 'GEMINI_API_KEY environment variable is not set.' });
+      return;
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+
+    const prompt = `You are a legal assistant specializing in data privacy laws like GDPR and CCPA.
+Generate a professional, legally-toned data deletion request email to be sent to a data broker.
+Use the following information:
+Broker Name: ${brokerName}
+User Name: ${name}
+User Email: ${email}
+User Address: ${address || 'Not provided'}
+
+The output should just be the text of the email itself. Do not include any conversational filler.`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+
+    const generatedText = response.text || '';
+
+    res.json({ text: generatedText });
+  } catch (error: any) {
+    console.error('Generate Removal Request API Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate removal request' });
   }
 });
 
