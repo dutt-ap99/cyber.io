@@ -1,10 +1,34 @@
 import express from 'express';
 import cors from 'cors';
+import { GoogleGenAI, Type } from "@google/genai";
 import { getPlatformResolution } from '../services/resolutionService.js';
+import { GoogleGenAI } from '@google/genai';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// RiskLevel Enum equivalent
+const RiskLevel = {
+    LOW: 'Low',
+    MEDIUM: 'Medium',
+    HIGH: 'High',
+    CRITICAL: 'Critical'
+};
+
+let cachedClient: GoogleGenAI | null = null;
+
+const getAiClient = () => {
+    if (cachedClient) return cachedClient;
+
+    const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("API_KEY is missing from environment variables");
+    }
+    cachedClient = new GoogleGenAI({ apiKey });
+    return cachedClient;
+};
+
 
 app.post('/api/resolve', async (req, res) => {
   try {
@@ -18,6 +42,47 @@ app.post('/api/resolve', async (req, res) => {
   } catch (error: any) {
     console.error('Resolution API Error:', error);
     res.status(500).json({ error: error.message || 'Failed to resolve' });
+  }
+});
+
+app.post('/api/generate-removal-request', async (req, res) => {
+  try {
+    const { name, email, address, brokerName } = req.body;
+
+    if (!name || !email || !brokerName) {
+      res.status(400).json({ error: 'Name, email, and brokerName are required.' });
+      return;
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      res.status(500).json({ error: 'GEMINI_API_KEY environment variable is not set.' });
+      return;
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+
+    const prompt = `You are a legal assistant specializing in data privacy laws like GDPR and CCPA.
+Generate a professional, legally-toned data deletion request email to be sent to a data broker.
+Use the following information:
+Broker Name: ${brokerName}
+User Name: ${name}
+User Email: ${email}
+User Address: ${address || 'Not provided'}
+
+The output should just be the text of the email itself. Do not include any conversational filler.`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+
+    const generatedText = response.text || '';
+
+    res.json({ text: generatedText });
+  } catch (error: any) {
+    console.error('Generate Removal Request API Error:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate removal request' });
   }
 });
 

@@ -1,21 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
 import { ScanResult, RiskLevel } from "../types";
-
-let cachedClient: GoogleGenAI | null = null;
-
-const getAiClient = () => {
-  if (cachedClient) {
-    return cachedClient;
-  }
-
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error("API_KEY is missing from environment variables");
-  }
-
-  cachedClient = new GoogleGenAI({ apiKey });
-  return cachedClient;
-};
 
 // Analyzes the potential footprint based on generic user info and generates search queries
 export const analyzeDigitalFootprint = async (name: string, location: string, email?: string, aiClient?: GoogleGenAI): Promise<ScanResult> => {
@@ -71,13 +54,15 @@ export const analyzeDigitalFootprint = async (name: string, location: string, em
       }
     });
 
-    const text = response.text;
-    if (!text) throw new Error("No response from AI");
-    
-    return JSON.parse(text) as ScanResult;
+    if (!response.ok) {
+        throw new Error('Analysis API returned an error');
+    }
+
+    const data = await response.json();
+    return data as ScanResult;
   } catch (error) {
     console.error("Analysis failed:", error);
-    // Fallback data if AI fails
+    // Fallback data if API fails
     return {
       riskScore: 75,
       summary: "Could not generate live analysis. Showing default high-risk vectors.",
@@ -100,11 +85,20 @@ export const generateRemovalInstructions = async (brokerName: string, aiClient?:
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
+    const response = await fetch('/api/instructions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ brokerName })
     });
-    return response.text || "No instructions generated.";
+
+    if (!response.ok) {
+        throw new Error('Instructions API returned an error');
+    }
+
+    const data = await response.json();
+    return data.text || "No instructions generated.";
   } catch (error) {
     return "Failed to retrieve instructions. Please try again.";
   }
@@ -126,11 +120,20 @@ export const generateDeletionEmail = async (brokerName: string, userData: { name
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
+    const response = await fetch('/api/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ brokerName, userData })
     });
-    return response.text || "Could not generate email.";
+
+    if (!response.ok) {
+        throw new Error('Email API returned an error');
+    }
+
+    const data = await response.json();
+    return data.text || "Could not generate email.";
   } catch (error) {
     return "Error generating email template.";
   }
