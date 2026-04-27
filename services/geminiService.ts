@@ -120,12 +120,12 @@ export const generateDeletionEmail = async (brokerName: string, userData: { name
   `;
 
   try {
-    const response = await fetch('/api/email', {
+    const response = await fetch('/api/generate-removal-request', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ brokerName, userData })
+      body: JSON.stringify({ brokerName, name: userData.name, email: userData.email, address: userData.address })
     });
 
     if (!response.ok) {

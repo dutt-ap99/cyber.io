@@ -2,7 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import { GoogleGenAI, Type } from "@google/genai";
 import { getPlatformResolution } from '../services/resolutionService.js';
-import { GoogleGenAI } from '@google/genai';
+import nodemailer from 'nodemailer';
+import { encryptField } from '../utils/encryption.js';
 
 const app = express();
 app.use(cors());
@@ -15,6 +16,9 @@ const RiskLevel = {
     HIGH: 'High',
     CRITICAL: 'Critical'
 };
+
+// Mock Database
+const dbLogs: any[] = [];
 
 let cachedClient: GoogleGenAI | null = null;
 
@@ -78,6 +82,47 @@ The output should just be the text of the email itself. Do not include any conve
     });
 
     const generatedText = response.text || '';
+
+    // Create a nodemailer transport
+    let transporter;
+    if (process.env.SMTP_HOST) {
+      transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+        }
+      });
+    } else {
+      transporter = nodemailer.createTransport({
+        jsonTransport: true
+      });
+    }
+
+    const placeholderEmail = `privacy@${brokerName.toLowerCase().replace(/\s+/g, '')}.com`;
+
+    // Send the email
+    await transporter.sendMail({
+      from: 'noreply@ghostprotocol.local',
+      replyTo: email,
+      to: placeholderEmail,
+      subject: `Data Deletion Request - ${name}`,
+      text: generatedText
+    });
+
+    // Mock database logging using encrypted fields
+    const logEntry = {
+      id: Date.now().toString(),
+      brokerName,
+      status: encryptField('Sent'),
+      emailContent: encryptField(generatedText),
+      timestamp: new Date().toISOString()
+    };
+
+    // Push to a global array acting as our mock database
+    dbLogs.push(logEntry);
+    console.log('Logged to mock database:', logEntry);
 
     res.json({ text: generatedText });
   } catch (error: any) {
