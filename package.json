@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
+    "@prisma/client": "^7.8.0",
     "@types/nodemailer": "^8.0.0",
+    "cheerio": "^1.2.0",
     "lucide-react": "^0.555.0",
     "nodemailer": "^8.0.6",
     "react": "^19.2.1",
@@ -30,6 +32,7 @@
     "@vitejs/plugin-react": "^5.0.0",
     "concurrently": "^9.2.1",
     "jsdom": "^29.1.0",
+    "prisma": "^7.8.0",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",

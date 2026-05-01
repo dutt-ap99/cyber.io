@@ -4,8 +4,10 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { getPlatformResolution } from '../services/resolutionService.js';
 import nodemailer from 'nodemailer';
 import { encryptField } from '../utils/encryption.js';
+import { PrismaClient } from '@prisma/client';
 
 const app = express();
+const prisma = new PrismaClient({ adapter: null, datasourceUrl: process.env.DATABASE_URL || "file:./dev.db" });
 app.use(cors());
 app.use(express.json());
 
@@ -16,9 +18,6 @@ const RiskLevel = {
     HIGH: 'High',
     CRITICAL: 'Critical'
 };
-
-// Mock Database
-const dbLogs: any[] = [];
 
 let cachedClient: GoogleGenAI | null = null;
 
@@ -111,18 +110,16 @@ The output should just be the text of the email itself. Do not include any conve
       text: generatedText
     });
 
-    // Mock database logging using encrypted fields
-    const logEntry = {
-      id: Date.now().toString(),
-      brokerName,
-      status: encryptField('Sent'),
-      emailContent: encryptField(generatedText),
-      timestamp: new Date().toISOString()
-    };
+    // Log to Prisma database using encrypted fields
+    const logEntry = await prisma.removalRequestLog.create({
+      data: {
+        brokerName,
+        status: encryptField('Sent'),
+        emailContent: encryptField(generatedText),
+      }
+    });
 
-    // Push to a global array acting as our mock database
-    dbLogs.push(logEntry);
-    console.log('Logged to mock database:', logEntry);
+    console.log('Logged to Prisma database:', logEntry);
 
     res.json({ text: generatedText });
   } catch (error: any) {
