@@ -37,23 +37,31 @@ test('analyzeDigitalFootprint returns default mock data on error', async () => {
 });
 
 test('generateRemovalInstructions returns instructions on success', async () => {
-  const mockClient = {
-    models: {
-      generateContent: async () => ({ text: "Step 1. Opt out" })
+  const originalFetch = global.fetch;
+  global.fetch = (async (url: any) => {
+    if (url === '/api/instructions') {
+      return { ok: true, json: async () => ({ text: 'Step 1. Opt out' }) };
     }
-  };
+    return { ok: false };
+  }) as any;
+  const mockClient = {};
   const result = await generateRemovalInstructions('BrokerA', mockClient as unknown as GoogleGenAI);
   assert.strictEqual(result, "Step 1. Opt out");
+  global.fetch = originalFetch;
 });
 
 test('generateRemovalInstructions handles error gracefully', async () => {
-  const mockClient = {
-    models: {
-      generateContent: async () => { throw new Error("Mock error"); }
+  const originalFetch = global.fetch;
+  global.fetch = (async (url: any) => {
+    if (url === '/api/instructions') {
+      return { ok: false };
     }
-  };
+    return { ok: false };
+  }) as any;
+  const mockClient = {};
   const result = await generateRemovalInstructions('BrokerA', mockClient as any);
   assert.strictEqual(result, "Failed to retrieve instructions. Please try again.");
+  global.fetch = originalFetch;
 });
 
 test('generateDeletionEmail returns email body on success', async () => {

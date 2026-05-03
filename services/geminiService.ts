@@ -1,8 +1,15 @@
+import { GoogleGenAI } from "@google/genai";
 import { ScanResult, RiskLevel } from "../types";
 
 // Analyzes the potential footprint based on generic user info and generates search queries
 export const analyzeDigitalFootprint = async (name: string, location: string, email?: string, aiClient?: GoogleGenAI): Promise<ScanResult> => {
-  const ai = aiClient || getAiClient();
+  const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+  const ai = aiClient || (apiKey ? new GoogleGenAI({ apiKey }) : null);
+
+  if (!ai) {
+    throw new Error("API_KEY is missing from environment variables");
+  }
+
   const prompt = `
     Act as a senior cybersecurity analyst. A user named "${name}" located in "${location}" wants to audit their public digital footprint.
     
@@ -20,45 +27,46 @@ export const analyzeDigitalFootprint = async (name: string, location: string, em
       config: {
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.OBJECT,
+          type: "OBJECT",
           properties: {
-            riskScore: { type: Type.NUMBER, description: "A number between 0 and 100 indicating exposure risk." },
-            summary: { type: Type.STRING, description: "A brief 2-sentence summary of why they might be at risk." },
+            riskScore: { type: "NUMBER", description: "A number between 0 and 100 indicating exposure risk." },
+            summary: { type: "STRING", description: "A brief 2-sentence summary of why they might be at risk." },
             dorks: {
-              type: Type.ARRAY,
+              type: "ARRAY",
               items: {
-                type: Type.OBJECT,
+                type: "OBJECT",
                 properties: {
-                  title: { type: Type.STRING },
-                  query: { type: Type.STRING, description: "The actual Google search query string." },
-                  description: { type: Type.STRING },
-                  risk: { type: Type.STRING, enum: [RiskLevel.LOW, RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.CRITICAL] }
+                  title: { type: "STRING" },
+                  query: { type: "STRING", description: "The actual Google search query string." },
+                  description: { type: "STRING" },
+                  risk: { type: "STRING", enum: [RiskLevel.LOW, RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.CRITICAL] }
                 }
               }
             },
             recommendedBrokers: {
-              type: Type.ARRAY,
+              type: "ARRAY",
               items: {
-                type: Type.OBJECT,
+                type: "OBJECT",
                 properties: {
-                  name: { type: Type.STRING },
-                  url: { type: Type.STRING },
-                  difficulty: { type: Type.STRING, enum: ['Easy', 'Medium', 'Hard'] },
-                  timeToComplete: { type: Type.STRING },
-                  category: { type: Type.STRING, enum: ['People Search', 'Marketing', 'Financial', 'Social'] }
+                  name: { type: "STRING" },
+                  url: { type: "STRING" },
+                  difficulty: { type: "STRING", enum: ['Easy', 'Medium', 'Hard'] },
+                  timeToComplete: { type: "STRING" },
+                  category: { type: "STRING", enum: ['People Search', 'Marketing', 'Financial', 'Social'] }
                 }
               }
             }
           }
-        }
+        } as any
       }
     });
 
-    if (!response.ok) {
-        throw new Error('Analysis API returned an error');
+    const dataText = response.text;
+    if (!dataText) {
+        throw new Error('Analysis API returned an empty response');
     }
 
-    const data = await response.json();
+    const data = JSON.parse(dataText);
     return data as ScanResult;
   } catch (error) {
     console.error("Analysis failed:", error);
@@ -76,7 +84,6 @@ export const analyzeDigitalFootprint = async (name: string, location: string, em
 };
 
 export const generateRemovalInstructions = async (brokerName: string, aiClient?: GoogleGenAI): Promise<string> => {
-  const ai = aiClient || getAiClient();
   const prompt = `
     Provide a concise, step-by-step guide on how to opt-out and remove personal data from the data broker "${brokerName}".
     Include a direct link to the opt-out page if known.
@@ -105,7 +112,6 @@ export const generateRemovalInstructions = async (brokerName: string, aiClient?:
 };
 
 export const generateDeletionEmail = async (brokerName: string, userData: { name: string, email: string, address?: string }, aiClient?: GoogleGenAI): Promise<string> => {
-  const ai = aiClient || getAiClient();
   const prompt = `
     Write a formal GDPR/CCPA data deletion request email to "${brokerName}".
     
